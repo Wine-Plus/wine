@@ -12,6 +12,7 @@
 #   JOBS=n              parallel jobs (default: nproc)
 #   CCACHE=1            compile through ccache
 #   CONFIGURE_FLAGS=..  extra ./configure flags
+#   STRIP=0             keep debug info (default: stripped)
 #
 # 64-bit Wine with the i386 PE side ("new WoW64"): 32-bit Windows programs
 # work without 32-bit Linux libraries.
@@ -55,6 +56,15 @@ make -j"$jobs" > make.log 2>&1 || { tail -60 make.log >&2; exit 1; }
 echo "== Installing into $dest"
 make install > install.log 2>&1 || { tail -40 install.log >&2; exit 1; }
 rm -rf "$dest/include" "$dest/share/man" "$dest/share/applications"
+
+# Drop debug info (about 3/4 of the size). STRIP=0 keeps it.
+if [ "${STRIP:-1}" = 1 ]; then
+  echo "== Stripping debug info"
+  find "$dest/bin" "$dest/lib/wine/x86_64-unix" -type f -exec sh -c \
+    'file -b "$1" | grep -q "^ELF" && strip --strip-unneeded "$1"' _ {} \;
+  find "$dest/lib/wine/x86_64-windows" -type f -exec x86_64-w64-mingw32-strip --strip-debug {} + 2>/dev/null || true
+  find "$dest/lib/wine/i386-windows" -type f -exec i686-w64-mingw32-strip --strip-debug {} + 2>/dev/null || true
+fi
 
 # What went into this build, for the release notes and for later reference.
 {
