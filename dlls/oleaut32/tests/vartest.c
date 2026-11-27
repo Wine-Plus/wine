@@ -2557,6 +2557,21 @@ static void test_VarNumFromParseNum(void)
   {
     CONVERT(16,0,0,16,4,0, VTBIT_I8); EXPECT_I8(0x8000000000000002ull);
   }
+  /* Hex numbers that fit in 32 bits are signed for floating point types too */
+  /* 0x7fffffff */
+  SETRGB(0, 7); SETRGB(1, 0xf); SETRGB(2, 0xf); SETRGB(3, 0xf);
+  SETRGB(4, 0xf); SETRGB(5, 0xf); SETRGB(6, 0xf); SETRGB(7, 0xf);
+  CONVERT(8,0,0,8,4,0, VTBIT_R8); EXPECT_R8(2147483647.0);
+  /* 0x80000002 */
+  SETRGB(0, 8); SETRGB(1, 0); SETRGB(2, 0); SETRGB(3, 0);
+  SETRGB(4, 0); SETRGB(5, 0); SETRGB(6, 0); SETRGB(7, 2);
+  CONVERT(8,0,0,8,4,0, VTBIT_R8); EXPECT_R8(-2147483646.0);
+  /* 0xffffff00 */
+  SETRGB(0, 0xf); SETRGB(1, 0xf); SETRGB(2, 0xf); SETRGB(3, 0xf);
+  SETRGB(4, 0xf); SETRGB(5, 0xf); SETRGB(6, 0); SETRGB(7, 0);
+  CONVERT(8,0,0,8,4,0, VTBIT_R8); EXPECT_R8(-256.0);
+  CONVERT(8,0,0,8,4,0, VTBIT_R4); EXPECT_R4(-256.0f);
+
   /* Assume the above pattern holds for numbers with hi-bit set */
 
   /* Negative numbers overflow if we have only unsigned outputs */
