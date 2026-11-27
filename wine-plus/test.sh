@@ -44,7 +44,7 @@ for a in x86 x86_64; do
   [ -s "$cache/$f" ] || curl -fsSL -o "$cache/$f" "https://dl.winehq.org/wine/wine-gecko/$gecko/$f"
 done
 
-export WINEPREFIX=$out/test-prefix WINEDEBUG=-all WINEDLLOVERRIDES="mscoree=d"
+export WINEPREFIX=$out/test-prefix WINEDEBUG=-all WINEDLLOVERRIDES="mscoree=d;winemenubuilder.exe=d"
 rm -rf "$WINEPREFIX"
 
 # One X server for the whole run: some tests talk to the explorer.exe
