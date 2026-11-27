@@ -26,7 +26,8 @@ done
 if [ ! -f "$build/Makefile" ]; then
   echo "== Configuring test build"
   mkdir -p "$build"
-  (cd "$build" && "$src/configure" --enable-archs=i386,x86_64 --without-x --without-freetype \
+  (cd "$src" && autoconf -o "$build/configure" && rm -rf autom4te.cache)
+  (cd "$build" && ./configure --srcdir="$src" --enable-archs=i386,x86_64 --without-x --without-freetype \
      --without-wayland --without-gstreamer --without-vulkan --without-opengl > configure.log 2>&1) || {
     tail -40 "$build/configure.log" >&2; exit 1; }
 fi

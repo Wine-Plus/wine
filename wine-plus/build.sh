@@ -43,9 +43,13 @@ if [ "${CCACHE:-0}" = 1 ]; then
 fi
 
 echo "== Configuring $name ($version)"
+# configure is generated from configure.ac into the build dir, so Wine-Plus
+# commits only change configure.ac (no conflicts with upstream's configure)
+# and the source tree stays clean.
+(cd "$src" && autoconf -o "$build/configure" && rm -rf autom4te.cache)
 cd "$build"
 # shellcheck disable=SC2086
-"$src/configure" --prefix="$dest" --enable-archs=i386,x86_64 --disable-tests \
+./configure --srcdir="$src" --prefix="$dest" --enable-archs=i386,x86_64 --disable-tests \
   "${cc_flags[@]}" ${CONFIGURE_FLAGS:-} > configure.log 2>&1 || {
   tail -40 configure.log >&2; exit 1; }
 grep -E "^configure: (WARNING|error)" configure.log || true
