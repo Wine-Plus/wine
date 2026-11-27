@@ -5,7 +5,7 @@ set -e
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y --no-install-recommends \
-  gcc make flex bison gettext ccache xz-utils curl git xvfb xauth \
+  gcc make flex bison gettext ccache xz-utils curl git xvfb xauth file binutils \
   gcc-mingw-w64-x86-64 gcc-mingw-w64-i686 g++-mingw-w64-x86-64 g++-mingw-w64-i686 \
   libx11-dev libxext-dev libxrandr-dev libxi-dev libxcursor-dev libxcomposite-dev \
   libxfixes-dev libxinerama-dev libxrender-dev libxxf86vm-dev libxkbcommon-dev \

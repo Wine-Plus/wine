@@ -5,7 +5,7 @@
 #   wine-plus/test.sh RUNNER_DIR
 #
 # The test programs are built from this tree in a separate, minimal build
-# (tools + the listed tests only). Without $DISPLAY, xvfb-run is used.
+# (tools + the listed tests only). Without $DISPLAY, an Xvfb server is used.
 set -euo pipefail
 
 src=$(cd "$(dirname "$0")/.." && pwd)
@@ -46,11 +46,28 @@ done
 
 export WINEPREFIX=$out/test-prefix WINEDEBUG=-all WINEDLLOVERRIDES="mscoree=d"
 rm -rf "$WINEPREFIX"
-run=()
-[ -z "${DISPLAY:-}" ] && run=(xvfb-run -a -s "-screen 0 1280x1024x24")
 
-"${run[@]}" "$runner/bin/wineboot" -i > /dev/null 2>&1
+# One X server for the whole run: some tests talk to the explorer.exe
+# desktop process started by earlier commands.
+xvfb_pid=
+cleanup() {
+  "$runner/bin/wineserver" -k 2>/dev/null || true
+  [ -n "$xvfb_pid" ] && kill "$xvfb_pid" 2>/dev/null || true
+}
+trap cleanup EXIT
+if [ -z "${DISPLAY:-}" ]; then
+  for n in $(seq 90 120); do [ -e /tmp/.X11-unix/X$n ] || break; done
+  Xvfb ":$n" -screen 0 1280x1024x24 -nolisten tcp > /dev/null 2>&1 &
+  xvfb_pid=$!
+  export DISPLAY=:$n
+  for _ in $(seq 50); do [ -e /tmp/.X11-unix/X$n ] && break; sleep 0.2; done
+fi
+
+"$runner/bin/wineboot" -i > /dev/null 2>&1
 "$runner/bin/wineserver" -w
+# Start the prefix once more: some services (e.g. ShellWindows in
+# explorer.exe) only register properly after the first boot of a new prefix.
+"$runner/bin/wine" cmd /c exit > /dev/null 2>&1 || true
 
 failed=0
 for t in "${tests[@]}"; do
@@ -58,7 +75,7 @@ for t in "${tests[@]}"; do
   for arch in x86_64 i386; do
     exe=$build/dlls/$mod/tests/$arch-windows/${mod}_test.exe
     log=$out/test-$mod-$name-$arch.log
-    timeout 900 "${run[@]}" "$runner/bin/wine" "$exe" "$name" > "$log" 2>&1 || true
+    timeout 900 "$runner/bin/wine" "$exe" "$name" > "$log" 2>&1 || true
     summary=$(grep -a "tests executed" "$log" | tail -1 | sed 's/^[0-9a-f]*://')
     if [[ $summary == *" 0 failures"* ]]; then
       echo "PASS  $mod:$name ($arch)  $summary"
@@ -69,5 +86,4 @@ for t in "${tests[@]}"; do
     fi
   done
 done
-"$runner/bin/wineserver" -k || true
 exit $failed
