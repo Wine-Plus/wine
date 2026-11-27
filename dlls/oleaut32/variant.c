@@ -2161,22 +2161,17 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
       V_DECIMAL(pVarDst).Lo64 = ul64;
       return S_OK;
     }
-    else if (dwVtBits & VTBIT_R4 && ((ul64 <= I4_MAX)||(l64 >= I4_MIN)))
+    else if (dwVtBits & VTBIT_R4 && FITS_AS_I4(ul64))
     {
+      /* Like VT_I4, 32-bit hex/octal numbers are signed */
       V_VT(pVarDst) = VT_R4;
-      if (ul64 <= I4_MAX)
-          V_R4(pVarDst) = ul64;
-      else
-          V_R4(pVarDst) = l64;
+      V_R4(pVarDst) = (LONG)ul64;
       return S_OK;
     }
-    else if (dwVtBits & VTBIT_R8 && ((ul64 <= I4_MAX)||(l64 >= I4_MIN)))
+    else if (dwVtBits & VTBIT_R8 && FITS_AS_I4(ul64))
     {
       V_VT(pVarDst) = VT_R8;
-      if (ul64 <= I4_MAX)
-          V_R8(pVarDst) = ul64;
-      else
-          V_R8(pVarDst) = l64;
+      V_R8(pVarDst) = (LONG)ul64;
       return S_OK;
     }
 
