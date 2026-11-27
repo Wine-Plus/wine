@@ -1270,6 +1270,84 @@ static void test_ParseName(void)
     IShellDispatch_Release(sd);
 }
 
+static void test_GetDetailsOf(void)
+{
+    WCHAR pathW[MAX_PATH], fileW[MAX_PATH];
+    IShellDispatch *sd;
+    FolderItems *items;
+    FolderItem *item;
+    Folder *folder;
+    HANDLE file;
+    HRESULT hr;
+    VARIANT v;
+    BSTR str, header;
+
+    hr = CoCreateInstance(&CLSID_Shell, NULL, CLSCTX_INPROC_SERVER,
+        &IID_IShellDispatch, (void**)&sd);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
+
+    GetTempPathW(ARRAY_SIZE(pathW), pathW);
+    lstrcpyW(fileW, pathW);
+    lstrcatW(fileW, L"wine_getdetailsof.txt");
+    file = CreateFileW(fileW, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "CreateFile failed: %lu\n", GetLastError());
+    CloseHandle(file);
+
+    V_VT(&v) = VT_BSTR;
+    V_BSTR(&v) = SysAllocString(pathW);
+    hr = IShellDispatch_NameSpace(sd, v, &folder);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
+    VariantClear(&v);
+
+    /* column header */
+    V_VT(&v) = VT_EMPTY;
+    header = NULL;
+    hr = Folder_GetDetailsOf(folder, v, 0, &header);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
+    ok(header && header[0], "got %s\n", wine_dbgstr_w(header));
+
+    /* Folder.Items also gives the header, as used by scripts */
+    hr = Folder_Items(folder, &items);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = (IDispatch *)items;
+    str = NULL;
+    hr = Folder_GetDetailsOf(folder, v, 0, &str);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
+    ok(str && header && !lstrcmpW(str, header), "got %s, expected %s\n",
+       wine_dbgstr_w(str), wine_dbgstr_w(header));
+    SysFreeString(str);
+    SysFreeString(header);
+    FolderItems_Release(items);
+
+    str = SysAllocString(L"wine_getdetailsof.txt");
+    item = NULL;
+    hr = Folder_ParseName(folder, str, &item);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
+    SysFreeString(str);
+
+    /* name column of an item; the extension may be hidden */
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = (IDispatch *)item;
+    str = NULL;
+    hr = Folder_GetDetailsOf(folder, v, 0, &str);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
+    ok(str && !wcsncmp(str, L"wine_getdetailsof", 17), "got %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
+    /* unknown column */
+    str = NULL;
+    hr = Folder_GetDetailsOf(folder, v, 1000, &str);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
+    ok(str && !str[0], "got %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
+    FolderItem_Release(item);
+    Folder_Release(folder);
+    IShellDispatch_Release(sd);
+    DeleteFileW(fileW);
+}
+
 static void test_Verbs(void)
 {
     FolderItemVerbs *verbs, *verbs2;
@@ -1583,6 +1661,7 @@ START_TEST(shelldispatch)
     test_ShellFolderViewDual();
     test_ShellWindows();
     test_ParseName();
+    test_GetDetailsOf();
     test_Verbs();
     test_ShellLinkObject();
     test_ShellExecute();

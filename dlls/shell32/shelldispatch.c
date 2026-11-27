@@ -1906,10 +1906,56 @@ static HRESULT WINAPI FolderImpl_CopyHere(Folder3 *iface, VARIANT item, VARIANT 
 
 static HRESULT WINAPI FolderImpl_GetDetailsOf(Folder3 *iface, VARIANT item, int column, BSTR *str)
 {
-    FIXME("(%p,%s,%d,%p)\n", iface, debugstr_variant(&item), column, str);
+    FolderImpl *This = impl_from_Folder(iface);
+    LPITEMIDLIST pidl = NULL;
+    LPCITEMIDLIST last_part = NULL;
+    IShellFolder2 *folder = This->folder;
+    FolderItem *folder_item;
+    SHELLDETAILS details;
+    HRESULT hr;
 
+    TRACE("(%p,%s,%d,%p)\n", iface, debugstr_variant(&item), column, str);
+
+    if (!str)
+        return E_POINTER;
     *str = NULL;
-    return E_NOTIMPL;
+
+    /* Anything but a FolderItem (nothing, or e.g. Folder.Items as commonly
+     * used in scripts) gives the column header. */
+    if (V_VT(&item) == VT_DISPATCH && V_DISPATCH(&item) &&
+        SUCCEEDED(IDispatch_QueryInterface(V_DISPATCH(&item), &IID_FolderItem, (void **)&folder_item)))
+    {
+        BSTR path;
+
+        hr = FolderItem_get_Path(folder_item, &path);
+        FolderItem_Release(folder_item);
+        if (FAILED(hr))
+            return hr;
+        hr = SHParseDisplayName(path, NULL, &pidl, 0, NULL);
+        SysFreeString(path);
+        if (FAILED(hr))
+            return hr;
+        hr = SHBindToParent(pidl, &IID_IShellFolder2, (void **)&folder, &last_part);
+        if (FAILED(hr))
+        {
+            ILFree(pidl);
+            return hr;
+        }
+    }
+    else
+        IShellFolder2_AddRef(folder);
+
+    hr = IShellFolder2_GetDetailsOf(folder, last_part, column, &details);
+    if (hr == S_OK)
+        hr = StrRetToBSTR(&details.str, last_part, str);
+    IShellFolder2_Release(folder);
+    ILFree(pidl);
+
+    /* Unknown columns give an empty string. */
+    if (FAILED(hr) && !*str)
+        *str = SysAllocStringLen(NULL, 0);
+
+    return *str ? S_OK : E_OUTOFMEMORY;
 }
 
 static HRESULT WINAPI FolderImpl_get_Self(Folder3 *iface, FolderItem **item)
