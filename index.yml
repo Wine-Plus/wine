@@ -1,0 +1,5 @@
+wine-plus-11.22-amd64:
+  Category: 'runners'
+  Sub-category: 'wine'
+  Channel: 'stable'
+  Date: '1795801552'
