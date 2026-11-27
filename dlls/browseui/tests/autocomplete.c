@@ -361,12 +361,26 @@ static void test_ACLMulti(void)
 
 static void test_ACListISF(void)
 {
+    HRESULT (WINAPI *pDllCanUnloadNow)(void);
     IEnumString *enumstring;
     IACList *list, *list2;
+    HMODULE module;
     HRESULT hr;
 
     hr = CoCreateInstance(&CLSID_ACListISF, NULL, CLSCTX_INPROC, &IID_IACList, (void**)&list);
     ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+
+    /* The implementing DLL must not be unloadable while the object is alive,
+     * or CoFreeUnusedLibraries() unloads it under its users. */
+    ok(GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                          *(const WCHAR **)list, &module), "GetModuleHandleExW failed: %lu\n", GetLastError());
+    pDllCanUnloadNow = (void *)GetProcAddress(module, "DllCanUnloadNow");
+    ok(pDllCanUnloadNow != NULL, "DllCanUnloadNow not found\n");
+    if (pDllCanUnloadNow)
+    {
+        hr = pDllCanUnloadNow();
+        ok(hr == S_FALSE, "DllCanUnloadNow returned %#lx with a live object.\n", hr);
+    }
 
     hr = IACList_QueryInterface(list, &IID_IEnumString, (void**)&enumstring);
     ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
