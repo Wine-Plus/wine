@@ -1054,8 +1054,8 @@ static HRESULT WINAPI OleControl_OnAmbientPropertyChange(IOleControl *iface, DIS
 static HRESULT WINAPI OleControl_FreezeEvents(IOleControl *iface, BOOL bFreeze)
 {
     WebBrowser *This = impl_from_IOleControl(iface);
-    FIXME("(%p)->(%x)\n", This, bFreeze);
-    return E_NOTIMPL;
+    FIXME("(%p)->(%x) semi-stub\n", This, bFreeze);
+    return S_OK;
 }
 
 static const IOleControlVtbl OleControlVtbl =
