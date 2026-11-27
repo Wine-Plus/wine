@@ -39,7 +39,7 @@ jobs:
       CCACHE_DIR: ${{ github.workspace }}/_ccache
       CCACHE_MAXSIZE: 3G
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: refs/tags/${{ inputs.tag || github.ref_name }}
           fetch-depth: 0
@@ -48,7 +48,7 @@ jobs:
       - name: Install build dependencies
         run: sudo sh wine-plus/deps-debian.sh
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ github.run_id }}
@@ -65,7 +65,7 @@ jobs:
       - name: Upload test logs
         if: always()
         continue-on-error: true   # never block the release
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-logs-${{ env.TAG }}
           path: ${{ env.OUT }}/test-*.log
