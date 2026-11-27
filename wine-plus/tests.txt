@@ -4,3 +4,4 @@ oleaut32 vartest
 ieframe webbrowser
 shell32 shelldispatch
 shell32 autocomplete
+browseui autocomplete
