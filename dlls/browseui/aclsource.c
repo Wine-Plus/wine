@@ -98,7 +98,10 @@ static ULONG WINAPI ACLShellSource_Release(IEnumString *iface)
     TRACE("(%p)->(%lu)\n", This, ref);
 
     if (ref == 0)
+    {
         free(This);
+        InterlockedDecrement(&BROWSEUI_refCount);
+    }
     return ref;
 }
 
@@ -206,5 +209,6 @@ HRESULT ACLShellSource_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
 
     TRACE("returning %p\n", This);
     *ppOut = (IUnknown *)&This->IEnumString_iface;
+    InterlockedIncrement(&BROWSEUI_refCount);
     return S_OK;
 }
