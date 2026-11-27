@@ -1,0 +1,5 @@
+# Conformance tests run against every Wine-Plus build: "<module> <test>".
+# Add the tests of every module a Wine-Plus commit changes.
+oleaut32 vartest
+ieframe webbrowser
+shell32 shelldispatch
