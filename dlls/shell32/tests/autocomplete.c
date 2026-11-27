@@ -907,6 +907,56 @@ static void test_custom_source(void)
     DestroyWindow(hwnd_edit);
 }
 
+static void test_aclist_empty_dropdown(void)
+{
+    static WCHAR str_alpha[] = L"test1";
+    static WCHAR str_beta[] = L"auto complete";
+    static WCHAR *suggestions[] = { str_alpha, str_beta };
+    IAutoCompleteDropDown *acdropdown;
+    IAutoComplete2 *autocomplete;
+    IUnknown *enumerator;
+    DWORD flags = 0;
+    HWND hwnd_edit;
+    HRESULT hr;
+
+    ShowWindow(hMainWnd, SW_SHOW);
+    hwnd_edit = CreateWindowA("Edit", "", WS_OVERLAPPED | WS_VISIBLE | WS_CHILD | WS_BORDER, 50, 5, 200, 20, hMainWnd, 0, NULL, 0);
+
+    hr = CoCreateInstance(&CLSID_AutoComplete, NULL, CLSCTX_INPROC_SERVER, &IID_IAutoComplete2, (void**)&autocomplete);
+    ok(hr == S_OK, "CoCreateInstance failed: %lx\n", hr);
+    hr = IAutoComplete2_QueryInterface(autocomplete, &IID_IAutoCompleteDropDown, (void**)&acdropdown);
+    ok(hr == S_OK, "No IAutoCompleteDropDown interface: %lx\n", hr);
+
+    /* The enumerator also implements IACList */
+    string_enumerator_create((void**)&enumerator, suggestions, ARRAY_SIZE(suggestions));
+    hr = IAutoComplete2_SetOptions(autocomplete, ACO_AUTOSUGGEST | ACO_UPDOWNKEYDROPSLIST);
+    ok(hr == S_OK, "IAutoComplete2_SetOptions failed: %lx\n", hr);
+    hr = IAutoComplete2_Init(autocomplete, hwnd_edit, enumerator, NULL, NULL);
+    ok(hr == S_OK, "IAutoComplete_Init failed: %lx\n", hr);
+
+    /* Dropping the list down from an empty edit control */
+    SetFocus(hwnd_edit);
+    SendMessageW(hwnd_edit, WM_KEYDOWN, VK_DOWN, 0);
+    SendMessageW(hwnd_edit, WM_KEYUP, VK_DOWN, 0xc0000000);
+    dispatch_messages();
+    hr = IAutoCompleteDropDown_GetDropDownStatus(acdropdown, &flags, NULL);
+    ok(hr == S_OK, "IAutoCompleteDropDown_GetDropDownStatus failed: %lx\n", hr);
+    ok(flags & ACDD_VISIBLE, "AutoComplete DropDown should be visible\n");
+
+    /* Resetting while the list is shown for the empty text */
+    hr = IAutoCompleteDropDown_ResetEnumerator(acdropdown);
+    ok(hr == S_OK, "IAutoCompleteDropDown_ResetEnumerator failed: %lx\n", hr);
+    dispatch_messages();
+
+    SendMessageW(hwnd_edit, WM_KEYDOWN, VK_ESCAPE, 0);
+    SendMessageW(hwnd_edit, WM_KEYUP, VK_ESCAPE, 0xc0000000);
+    dispatch_messages();
+    IAutoCompleteDropDown_Release(acdropdown);
+    IAutoComplete2_Release(autocomplete);
+    IUnknown_Release(enumerator);
+    DestroyWindow(hwnd_edit);
+}
+
 START_TEST(autocomplete)
 {
     HRESULT r;
@@ -936,6 +986,7 @@ START_TEST(autocomplete)
     test_killfocus();
 
     test_custom_source();
+    test_aclist_empty_dropdown();
 
     PostQuitMessage(0);
     while(GetMessageA(&msg,0,0,0)) {
