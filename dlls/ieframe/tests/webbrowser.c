@@ -2678,6 +2678,24 @@ static void test_GetControlInfo(IWebBrowser2 *unk)
     IOleControl_Release(control);
 }
 
+static void test_FreezeEvents(IWebBrowser2 *unk)
+{
+    IOleControl *control;
+    HRESULT hres;
+
+    hres = IWebBrowser2_QueryInterface(unk, &IID_IOleControl, (void**)&control);
+    ok(hres == S_OK, "Could not get IOleControl: %08lx\n", hres);
+    if(FAILED(hres))
+        return;
+
+    hres = IOleControl_FreezeEvents(control, TRUE);
+    ok(hres == S_OK, "FreezeEvents(TRUE) failed: %08lx\n", hres);
+    hres = IOleControl_FreezeEvents(control, FALSE);
+    ok(hres == S_OK, "FreezeEvents(FALSE) failed: %08lx\n", hres);
+
+    IOleControl_Release(control);
+}
+
 static void test_Extent(IWebBrowser2 *unk)
 {
     IOleObject *oleobj;
@@ -3949,6 +3967,7 @@ static void test_WebBrowser(DWORD flags, BOOL do_close)
     }
     test_ie_funcs(webbrowser);
     test_GetControlInfo(webbrowser);
+    test_FreezeEvents(webbrowser);
     test_wb_funcs(webbrowser, FALSE);
     test_ConnectionPoint(webbrowser, FALSE);
     test_IServiceProvider(webbrowser);
