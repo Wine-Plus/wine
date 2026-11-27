@@ -625,7 +625,8 @@ static void autocomplete_text(IAutoCompleteImpl *ac, HWND hwnd, enum autoappend_
 
     if (ac->aclist)
     {
-        if (text[len - 1] == '\\' || text[len - 1] == '/')
+        /* len is 0 when an empty list is dropped down (autoappend_flag_displayempty) */
+        if (len && (text[len - 1] == '\\' || text[len - 1] == '/'))
             flag = autoappend_flag_no;
         expanded = aclist_expand(ac, text);
     }
