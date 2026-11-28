@@ -2237,6 +2237,12 @@ static void calc_menu_bar_size( HDC hdc, POINT pos, UINT width, struct menu *men
     }
 }
 
+BOOL is_empty_menu_bar( HMENU handle )
+{
+    struct menu *menu = unsafe_menu_ptr( handle );
+    return menu && !menu->nItems;
+}
+
 UINT get_menu_bar_height( HWND hwnd, UINT width, INT org_x, INT org_y )
 {
     RECT rect = { org_x, org_y, org_x + width, 0 };
@@ -2246,7 +2252,12 @@ UINT get_menu_bar_height( HWND hwnd, UINT width, INT org_x, INT org_y )
 
     TRACE( "hwnd %p, width %d, at (%d, %d).\n", hwnd, width, org_x, org_y );
 
-    if ((menu = unsafe_menu_ptr( get_menu( hwnd )))) menu->Height = 0; /* force size recalculate */
+    if ((menu = unsafe_menu_ptr( get_menu( hwnd ))))
+    {
+        /* A menu bar without items takes no space, which programs use to hide it */
+        if (!menu->nItems) return 0;
+        menu->Height = 0; /* force size recalculate */
+    }
 
     hdc = NtUserGetDCEx( hwnd, 0, DCX_CACHE | DCX_WINDOW );
     height = NtUserDrawMenuBarTemp( hwnd, hdc, &rect, 0, 0 );

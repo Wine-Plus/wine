@@ -4408,6 +4408,42 @@ if (0) /* FIXME: uncomment once Wine is fixed */ {
     DeleteObject(hbmp);
 }
 
+static void test_empty_menu_bar(void)
+{
+    HWND hwnd, ref;
+    RECT rc, rc_ref;
+    HMENU menu;
+    BOOL ret;
+
+    /* A menu bar without items takes no space: VB style programs hide their
+     * menu bar by removing all items */
+    ref = CreateWindowA( "static", NULL, WS_OVERLAPPEDWINDOW, 0, 0, 300, 200, NULL, NULL, NULL, NULL );
+    ok( ref != NULL, "CreateWindow failed: %lu\n", GetLastError() );
+    menu = CreateMenu();
+    hwnd = CreateWindowA( "static", NULL, WS_OVERLAPPEDWINDOW, 0, 0, 300, 200, NULL, menu, NULL, NULL );
+    ok( hwnd != NULL, "CreateWindow failed: %lu\n", GetLastError() );
+
+    GetClientRect( ref, &rc_ref );
+    GetClientRect( hwnd, &rc );
+    ok( rc.bottom == rc_ref.bottom, "empty menu bar: client height %ld, expected %ld\n", rc.bottom, rc_ref.bottom );
+
+    ret = AppendMenuA( menu, MF_STRING, 100, "&File" );
+    ok( ret, "AppendMenu failed: %lu\n", GetLastError() );
+    DrawMenuBar( hwnd );
+    GetClientRect( hwnd, &rc );
+    ok( rc.bottom < rc_ref.bottom, "menu bar with an item: client height %ld, expected less than %ld\n",
+        rc.bottom, rc_ref.bottom );
+
+    ret = RemoveMenu( menu, 0, MF_BYPOSITION );
+    ok( ret, "RemoveMenu failed: %lu\n", GetLastError() );
+    DrawMenuBar( hwnd );
+    GetClientRect( hwnd, &rc );
+    ok( rc.bottom == rc_ref.bottom, "emptied menu bar: client height %ld, expected %ld\n", rc.bottom, rc_ref.bottom );
+
+    DestroyWindow( hwnd );
+    DestroyWindow( ref );
+}
+
 START_TEST(menu)
 {
     register_menu_check_class();
@@ -4439,5 +4475,6 @@ START_TEST(menu)
     test_menu_maxdepth();
     test_menu_circref();
     test_emptypopup();
+    test_empty_menu_bar();
     test_AppendMenu();
 }
