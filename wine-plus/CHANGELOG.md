@@ -38,6 +38,9 @@ listed. The commits themselves are on the `plus` branch:
 
 ### Programs and controls
 
+- **Programs that hide their menu bar no longer show an empty strip** at the
+  top of the window. A menu bar without items takes no space, as on Windows.
+  (win32u, found with XYplorer)
 - **The WebBrowser control can be hosted in Visual Basic style containers.**
   (ieframe, found with XYplorer's preview pane)
 - **Numbers like `&HFFFFFF00` convert to floating point correctly** instead
