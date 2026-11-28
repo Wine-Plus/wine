@@ -47,6 +47,7 @@ HRESULT async_wait_queue_empty(struct async_queue *queue, DWORD timeout);
 
 HRESULT data_key_create( IUnknown *outer, REFIID iid, void **obj );
 HRESULT file_stream_create( IUnknown *outer, REFIID iid, void **obj );
+HRESULT lexicon_create( IUnknown *outer, REFIID iid, void **obj );
 HRESULT resource_manager_create( IUnknown *outer, REFIID iid, void **obj );
 HRESULT speech_stream_create( IUnknown *outer, REFIID iid, void **obj );
 HRESULT speech_voice_create( IUnknown *outer, REFIID iid, void **obj );

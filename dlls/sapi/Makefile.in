@@ -6,6 +6,7 @@ SOURCES = \
 	async.c \
 	automation.c \
 	dispatch.c \
+	lexicon.c \
 	main.c \
 	mmaudio.c \
 	resource.c \

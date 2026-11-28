@@ -591,6 +591,104 @@ typedef [hidden] enum SPPARTOFSPEECH
     SPPS_SuppressWord  = 0xF000
 } SPPARTOFSPEECH;
 
+typedef [hidden] enum SPLEXICONTYPE
+{
+    eLEXTYPE_USER           = (1L << 0),
+    eLEXTYPE_APP            = (1L << 1),
+    eLEXTYPE_VENDORLEXICON  = (1L << 2),
+    eLEXTYPE_LETTERTOSOUND  = (1L << 3),
+    eLEXTYPE_MORPHOLOGY     = (1L << 4),
+    eLEXTYPE_RESERVED4      = (1L << 5),
+    eLEXTYPE_USER_SHORTCUT  = (1L << 6),
+    eLEXTYPE_RESERVED6      = (1L << 7),
+    eLEXTYPE_RESERVED7      = (1L << 8),
+    eLEXTYPE_RESERVED8      = (1L << 9),
+    eLEXTYPE_RESERVED9      = (1L << 10),
+    eLEXTYPE_RESERVED10     = (1L << 11),
+    eLEXTYPE_PRIVATE1       = (1L << 12),
+    eLEXTYPE_PRIVATE2       = (1L << 13),
+    eLEXTYPE_PRIVATE3       = (1L << 14),
+    eLEXTYPE_PRIVATE4       = (1L << 15),
+    eLEXTYPE_PRIVATE5       = (1L << 16),
+    eLEXTYPE_PRIVATE6       = (1L << 17),
+    eLEXTYPE_PRIVATE7       = (1L << 18),
+    eLEXTYPE_PRIVATE8       = (1L << 19),
+    eLEXTYPE_PRIVATE9       = (1L << 20),
+    eLEXTYPE_PRIVATE10      = (1L << 21),
+    eLEXTYPE_PRIVATE11      = (1L << 22),
+    eLEXTYPE_PRIVATE12      = (1L << 23),
+    eLEXTYPE_PRIVATE13      = (1L << 24),
+    eLEXTYPE_PRIVATE14      = (1L << 25),
+    eLEXTYPE_PRIVATE15      = (1L << 26),
+    eLEXTYPE_PRIVATE16      = (1L << 27),
+    eLEXTYPE_PRIVATE17      = (1L << 28),
+    eLEXTYPE_PRIVATE18      = (1L << 29),
+    eLEXTYPE_PRIVATE19      = (1L << 30),
+    eLEXTYPE_PRIVATE20      = 0x80000000
+} SPLEXICONTYPE;
+
+typedef [hidden] enum SPWORDTYPE
+{
+    eWORDTYPE_ADDED   = (1L << 0),
+    eWORDTYPE_DELETED = (1L << 1)
+} SPWORDTYPE;
+
+typedef [hidden, restricted] struct SPWORDPRONUNCIATION
+{
+    struct SPWORDPRONUNCIATION *pNextWordPronunciation;
+    SPLEXICONTYPE eLexiconType;
+    WORD LangID;
+    WORD wPronunciationFlags;
+    SPPARTOFSPEECH ePartOfSpeech;
+    SPPHONEID szPronunciation[1];
+} SPWORDPRONUNCIATION;
+
+typedef [hidden, restricted] struct SPWORDPRONUNCIATIONLIST
+{
+    ULONG ulSize;
+    BYTE *pvBuffer;
+    SPWORDPRONUNCIATION *pFirstWordPronunciation;
+} SPWORDPRONUNCIATIONLIST;
+
+typedef [hidden, restricted] struct SPWORD
+{
+    struct SPWORD *pNextWord;
+    WORD LangID;
+    WORD wReserved;
+    SPWORDTYPE eWordType;
+    WCHAR *pszWord;
+    SPWORDPRONUNCIATION *pFirstWordPronunciation;
+} SPWORD;
+
+typedef [hidden, restricted] struct SPWORDLIST
+{
+    ULONG ulSize;
+    BYTE *pvBuffer;
+    SPWORD *pFirstWord;
+} SPWORDLIST;
+
+[
+    object,
+    uuid(da41a7c2-5383-4db2-916b-6c1719e3db58),
+    helpstring("ISpLexicon Interface"),
+    pointer_default(unique),
+    restricted
+]
+interface ISpLexicon : IUnknown
+{
+    HRESULT GetPronunciations([in] LPCWSTR pszWord, [in] WORD LangID, [in] DWORD dwFlags,
+                              [in, out] SPWORDPRONUNCIATIONLIST *pWordPronunciationList);
+    HRESULT AddPronunciation([in] LPCWSTR pszWord, [in] WORD LangID, [in] SPPARTOFSPEECH ePartOfSpeech,
+                             [in] const SPPHONEID *pszPronunciation);
+    HRESULT RemovePronunciation([in] LPCWSTR pszWord, [in] WORD LangID, [in] SPPARTOFSPEECH ePartOfSpeech,
+                                [in] const SPPHONEID *pszPronunciation);
+    HRESULT GetGeneration([out] DWORD *pdwGeneration);
+    HRESULT GetGenerationChange([in] DWORD dwFlags, [in, out] DWORD *pdwGeneration,
+                                [in, out] SPWORDLIST *pWordList);
+    HRESULT GetWords([in] DWORD dwFlags, [in, out] DWORD *pdwGeneration, [in, out] DWORD *pdwCookie,
+                     [in, out] SPWORDLIST *pWordList);
+};
+
 typedef [restricted, hidden] struct SPVPITCH
 {
     long MiddleAdj;
@@ -1321,6 +1419,14 @@ library SpeechLib
     coclass SpStream
     {
         interface ISpStream;
+    };
+
+    [
+        uuid(0655e396-25d0-11d3-9c26-00c04f8ef87c)
+    ]
+    coclass SpLexicon
+    {
+        [default] interface ISpLexicon;
     };
 
     [

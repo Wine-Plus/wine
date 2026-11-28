@@ -105,6 +105,7 @@ static const struct IClassFactoryVtbl class_factory_vtbl =
 
 static struct class_factory data_key_cf       = { { &class_factory_vtbl }, data_key_create };
 static struct class_factory file_stream_cf    = { { &class_factory_vtbl }, file_stream_create };
+static struct class_factory lexicon_cf        = { { &class_factory_vtbl }, lexicon_create };
 static struct class_factory mmaudio_out_cf    = { { &class_factory_vtbl }, mmaudio_out_create };
 static struct class_factory resource_mgr_cf   = { { &class_factory_vtbl }, resource_manager_create };
 static struct class_factory speech_stream_cf  = { { &class_factory_vtbl }, speech_stream_create };
@@ -126,6 +127,8 @@ HRESULT WINAPI DllGetClassObject( REFCLSID clsid, REFIID iid, void **obj )
         cf = &data_key_cf.IClassFactory_iface;
     else if (IsEqualCLSID( clsid, &CLSID_SpFileStream ))
         cf = &file_stream_cf.IClassFactory_iface;
+    else if (IsEqualCLSID( clsid, &CLSID_SpLexicon ))
+        cf = &lexicon_cf.IClassFactory_iface;
     else if (IsEqualCLSID( clsid, &CLSID_SpMMAudioOut ))
         cf = &mmaudio_out_cf.IClassFactory_iface;
     else if (IsEqualCLSID( clsid, &CLSID_SpObjectTokenCategory ))
