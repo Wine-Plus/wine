@@ -71,7 +71,19 @@ if [ "${STRIP:-1}" = 1 ]; then
 fi
 
 # What went into this build, for the release notes and for later reference.
+# The notes start with this release's section of CHANGELOG.md ("## plus-<version>",
+# from a name like wine-plus-11.22-amd64), then list the commits.
+tag=${name#wine-}; tag=${tag%-amd64}
+changes=$(awk -v h="## $tag" '$0 == h {on=1; next} on && /^## / {exit} on' "$src/wine-plus/CHANGELOG.md" 2>/dev/null |
+          sed -e 's/^### /#### /' -e '/./,$!d')
 {
+  if [ -n "$changes" ]; then
+    echo "$changes"
+    echo
+    echo "Also contains the fixes of earlier releases that upstream doesn't have yet; see the"
+    echo "[changelog](https://github.com/Wine-Plus/wine/blob/plus/wine-plus/CHANGELOG.md)."
+    echo
+  fi
   echo "Wine-Plus $name, built $(date -u +%Y-%m-%dT%H:%MZ) from $(git -C "$src" rev-parse --short HEAD 2>/dev/null || echo unknown)."
   base=$(git -C "$src" describe --tags --abbrev=0 --match 'wine-*' 2>/dev/null || true)
   if [ -n "$base" ]; then
@@ -81,6 +93,7 @@ fi
   fi
 } > "$dest/WINE-PLUS.txt"
 cp "$dest/WINE-PLUS.txt" "$out/$name.notes.md"
+cp "$src/wine-plus/CHANGELOG.md" "$dest/CHANGELOG.md" 2>/dev/null || true
 
 echo "== Packaging $name.tar.xz"
 tar -C "$out" -cf - "$name" | xz -T0 -6 > "$out/$name.tar.xz"
