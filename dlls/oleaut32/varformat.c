@@ -1011,7 +1011,8 @@ HRESULT WINAPI VarTokenizeFormatString(LPOLESTR lpszFormat, LPBYTE rgbTok,
        */
       int count = -1;
       header->type = FMT_TYPE_DATE;
-      while ((*pFormat == 'y' || *pFormat == 'Y') && count < 4)
+      /* At most 'yyyy', further y's start the next token: 'yyyyy' is 'yyyy' 'y' */
+      while ((*pFormat == 'y' || *pFormat == 'Y') && count < 3)
       {
         pFormat++;
         count++;
