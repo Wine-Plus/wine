@@ -696,16 +696,47 @@ static HRESULT WINAPI token_category_SetDefaultTokenId( ISpObjectTokenCategory *
     return E_NOTIMPL;
 }
 
+static HRESULT first_token_id( ISpObjectTokenCategory *iface, WCHAR **id )
+{
+    IEnumSpObjectTokens *tokens;
+    ISpObjectToken *token;
+    HRESULT hr;
+
+    if (FAILED(hr = ISpObjectTokenCategory_EnumTokens( iface, NULL, NULL, &tokens )))
+        return hr;
+    hr = IEnumSpObjectTokens_Next( tokens, 1, &token, NULL );
+    IEnumSpObjectTokens_Release( tokens );
+    if (hr != S_OK)
+        return SPERR_NOT_FOUND;
+
+    hr = ISpObjectToken_GetId( token, id );
+    ISpObjectToken_Release( token );
+    return hr;
+}
+
+static HRESULT dup_reg_string( HKEY key, const WCHAR *subkey, const WCHAR *name, WCHAR **id )
+{
+    WCHAR value[512];
+    DWORD size = sizeof(value);
+
+    if (RegGetValueW( key, subkey, name, RRF_RT_REG_SZ, NULL, value, &size ) != ERROR_SUCCESS || !value[0])
+        return SPERR_NOT_FOUND;
+    if (!(*id = CoTaskMemAlloc( size )))
+        return E_OUTOFMEMORY;
+    wcscpy( *id, value );
+    return S_OK;
+}
+
 static HRESULT WINAPI token_category_GetDefaultTokenId( ISpObjectTokenCategory *iface,
                                                         LPWSTR *id )
 {
     struct token_category *This = impl_from_ISpObjectTokenCategory( iface );
     struct data_key *this_data_key;
-    LONG res;
-    WCHAR regvalue[512];
-    DWORD regvalue_size = sizeof( regvalue );
+    const WCHAR *subkey;
+    HKEY root;
+    HRESULT hr;
 
-    FIXME( "(%p)->(%p): semi-stub\n", iface, id );
+    TRACE( "(%p)->(%p)\n", iface, id );
 
     if (!This->data_key)
         return SPERR_UNINITIALIZED;
@@ -713,26 +744,19 @@ static HRESULT WINAPI token_category_GetDefaultTokenId( ISpObjectTokenCategory *
     if (!id)
         return E_POINTER;
 
-    /* todo: check HKCU's DefaultTokenId before */
+    /* The user's choice, stored as DefaultTokenId under HKCU for machine-wide categories. */
+    if (This->id && SUCCEEDED(parse_cat_id( This->id, &root, &subkey )) && root == HKEY_LOCAL_MACHINE &&
+        (hr = dup_reg_string( HKEY_CURRENT_USER, subkey, L"DefaultTokenId", id )) != SPERR_NOT_FOUND)
+        return hr;
 
+    /* Then the category's own default. */
     this_data_key = impl_from_ISpRegDataKey( This->data_key );
+    if ((hr = dup_reg_string( this_data_key->key, NULL, L"DefaultDefaultTokenId", id )) != SPERR_NOT_FOUND)
+        return hr;
 
-    res = RegGetValueW( this_data_key->key, NULL, L"DefaultDefaultTokenId", RRF_RT_REG_SZ,
-                        NULL, &regvalue, &regvalue_size);
-    if (res == ERROR_FILE_NOT_FOUND) {
-        return SPERR_NOT_FOUND;
-    } else if (res != ERROR_SUCCESS) {
-        /* probably not the correct return value */
-        FIXME( "returning %08lx\n", res );
-        return res;
-    }
-
-    *id = CoTaskMemAlloc( regvalue_size );
-    if (!*id)
-        return E_OUTOFMEMORY;
-    wcscpy( *id, regvalue );
-
-    return S_OK;
+    /* Without a default the first token of the category is used; SPERR_NOT_FOUND only
+     * when it has none. */
+    return first_token_id( iface, id );
 }
 
 const struct ISpObjectTokenCategoryVtbl token_category_vtbl =

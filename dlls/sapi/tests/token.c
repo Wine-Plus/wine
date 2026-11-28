@@ -709,6 +709,48 @@ static const IClassFactoryVtbl ClassFactoryVtbl = {
 
 static IClassFactory test_class_cf = { &ClassFactoryVtbl };
 
+static void test_default_token_fallback(void)
+{
+    WCHAR expected[MAX_PATH];
+    ISpObjectTokenCategory *cat;
+    WCHAR *token_id;
+    HKEY key;
+    LONG res;
+    HRESULT hr;
+
+    hr = CoCreateInstance( &CLSID_SpObjectTokenCategory, NULL, CLSCTX_INPROC_SERVER,
+                           &IID_ISpObjectTokenCategory, (void **)&cat );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    hr = ISpObjectTokenCategory_SetId( cat, test_cat, FALSE );
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    /* No default set: the first token of the category. */
+    token_id = NULL;
+    hr = ISpObjectTokenCategory_GetDefaultTokenId( cat, &token_id );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    swprintf( expected, MAX_PATH, L"%ls\\Tokens\\Voice1", test_cat );
+    ok( token_id && !wcscmp( token_id, expected ), "got %s\n", wine_dbgstr_w(token_id) );
+    CoTaskMemFree( token_id );
+
+    /* An explicit default wins. */
+    res = RegOpenKeyExA( HKEY_CURRENT_USER, "Software\\Winetest\\sapi\\TestVoices", 0, KEY_ALL_ACCESS, &key );
+    ok( res == ERROR_SUCCESS, "got %ld\n", res );
+    swprintf( expected, MAX_PATH, L"%ls\\Tokens\\Voice3", test_cat );
+    res = RegSetValueExW( key, L"DefaultDefaultTokenId", 0, REG_SZ, (const BYTE *)expected,
+                          (wcslen( expected ) + 1) * sizeof(WCHAR) );
+    ok( res == ERROR_SUCCESS, "got %ld\n", res );
+
+    token_id = NULL;
+    hr = ISpObjectTokenCategory_GetDefaultTokenId( cat, &token_id );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    ok( token_id && !wcscmp( token_id, expected ), "got %s\n", wine_dbgstr_w(token_id) );
+    CoTaskMemFree( token_id );
+
+    RegDeleteValueW( key, L"DefaultDefaultTokenId" );
+    RegCloseKey( key );
+    ISpObjectTokenCategory_Release( cat );
+}
+
 static void test_object_token(void)
 {
     static const WCHAR test_token_id[] = L"HKEY_LOCAL_MACHINE\\Software\\Winetest\\sapi\\TestToken";
@@ -1012,6 +1054,7 @@ START_TEST(token)
     test_token_category();
     test_token_enum();
     test_default_token_id();
+    test_default_token_fallback();
     test_object_token();
     tests_token_voices();
     CoUninitialize();
