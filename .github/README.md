@@ -36,17 +36,23 @@ exist without their decades of work.
 
 ## Using it
 
-With [Q4Wine-Plus](https://github.com/Wine-Plus/q4wine):
+The easiest way is [Q4Wine-Plus](https://github.com/Wine-Plus/q4wine), a Wine
+prefix and program manager. It installs Wine-Plus for you, so no Wine package
+is needed:
+
+1. Download the portable Q4Wine-Plus from its
+   [releases](https://github.com/Wine-Plus/q4wine/releases), unpack it and run `./q4wine`.
+2. In the first startup wizard, press **Download and install Wine-Plus**.
+
+Wine-Plus then is the default Wine for your prefixes, and new Wine-Plus
+releases show up in *Prefixes → Manage Wine runners*. From the command line:
 
 ```sh
-q4wine-ctl repo add https://raw.githubusercontent.com/Wine-Plus/wine/repo/
-q4wine-ctl runner install wine-plus-11.22-amd64
-q4wine-ctl prefix set-runner MYPREFIX wine-plus-11.22-amd64
+q4wine-ctl runner install wine-plus --default
 ```
 
-In the GUI, Wine-Plus builds appear under *Prefixes → Manage Wine runners*.
-Any other launcher that uses Bottles-style runner repositories can add the
-same index URL.
+Other launchers that use Bottles-style runner repositories can add the index
+`https://raw.githubusercontent.com/Wine-Plus/wine/repo/`.
 
 Without a launcher, download the `.tar.xz` from
 [Releases](https://github.com/Wine-Plus/wine/releases), unpack it anywhere and
