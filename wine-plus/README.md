@@ -33,7 +33,14 @@ anywhere and run `wine-plus-…/bin/wine`.
 
 1. Commit it on `plus`, ideally with a conformance test in `dlls/<module>/tests`.
 2. Add the test to `wine-plus/tests.txt`.
-3. Push `plus`, then make a release (below).
+3. Describe it in `wine-plus/CHANGELOG.md`, under the heading of the release it
+   will be in (`## plus-<wine version>`; add the heading if it's missing). Say what
+   users notice, the component and the program where it was found.
+4. Push `plus`, then make a release (below).
+
+The release notes start with the release's `CHANGELOG.md` section, followed by the
+list of commits. Without a section they only list the commits. When upstream fixes a
+problem itself and you drop the Wine-Plus commit, note that under the new release.
 
 ## Making a release for a Wine version
 

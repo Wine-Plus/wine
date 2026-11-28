@@ -4,6 +4,8 @@ Wine-Plus is [Wine](https://www.winehq.org) with additional fixes for Windows
 programs that don't work, or don't work well, on upstream Wine. It is built
 as a ready-to-use runner: 64-bit Wine with 32-bit support through new WoW64.
 
+**[What's improved over upstream Wine →](../wine-plus/CHANGELOG.md)**
+
 ## Goals
 
 - **Fix real programs quickly.** Wine-Plus fixes take days, not release cycles. Each fix starts
@@ -52,25 +54,19 @@ run `wine-plus-<version>-amd64/bin/wine`.
 
 ## What's fixed
 
-The fixes are the commits on the `plus` branch that come after upstream
-`master`:
+The **[changelog](../wine-plus/CHANGELOG.md)** lists every Wine-Plus fix: what it
+changes for users and the program where the problem was found. Some examples:
 
-```sh
-git log --oneline master..plus
-```
+- **Speech (SAPI 5):** installed voices can be selected and used, and engines
+  such as ScanSoft RealSpeak no longer crash when speaking.
+- **Shell:** `Folder::GetDetailsOf()` is implemented, and crashes in
+  autocompleting path fields are fixed.
+- **Programs and controls:**
+  - XYplorer (64-bit) starts.
+  - FileLocator Pro starts.
+  - The WebBrowser control works in Visual Basic style containers.
 
-They include, for example:
-
-- **Speech (SAPI 5):** installed voices can be selected and used. Voice installers
-  don't set a default voice, so on upstream Wine programs couldn't use any voice.
-  Engines such as ScanSoft RealSpeak also get the lexicon they need.
-- **Shell:**
-  - `Folder::GetDetailsOf()` is implemented.
-  - Fixes for autocomplete in file and path fields.
-- **OLE Automation:** numeric conversion fixes found with file managers such as XYplorer.
-- **elscore:** a stub of the Windows language-detection DLL, so programs that load it start.
-
-Each release lists the fixes it contains.
+Each release's notes list the fixes it added.
 
 ## Contributing
 
@@ -81,6 +77,7 @@ Please:
 - keep each commit to one fix, in Wine's style (`module: Description.`),
 - add a conformance test in `dlls/<module>/tests` where possible, and add it to
   `wine-plus/tests.txt`,
+- add an entry to `wine-plus/CHANGELOG.md` that describes the fix from a user's point of view,
 - review and test what you submit, whoever or whatever wrote it. You are
   responsible for your changes and must be able to explain them.
 
