@@ -5,3 +5,5 @@ ieframe webbrowser
 shell32 shelldispatch
 shell32 autocomplete
 browseui autocomplete
+sapi token
+sapi lexicon
