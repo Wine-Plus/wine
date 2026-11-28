@@ -7,3 +7,4 @@ shell32 autocomplete
 browseui autocomplete
 sapi token
 sapi lexicon
+oleaut32 varformat
