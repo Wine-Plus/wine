@@ -4,8 +4,8 @@ Channel: stable
 File:
 - file_name: wine-plus-11.22-amd64.tar.xz
   url: https://github.com/Wine-Plus/wine/releases/download/plus-11.22/wine-plus-11.22-amd64.tar.xz
-  file_checksum: 25fb8fbba596821c400fa0848dc5c122
-  file_size: 102849604
+  file_checksum: 0292bb16a78b8d1dbb0755bc13aab306
+  file_size: 102878124
 Post:
 - action: rename
   source: wine-plus-11.22-amd64
