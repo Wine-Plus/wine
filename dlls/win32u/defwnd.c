@@ -1797,7 +1797,7 @@ static void nc_paint( HWND hwnd, HRGN clip )
 
         menu = get_menu( hwnd );
         if (!is_menu( menu )) rect.top += get_system_metrics( SM_CYMENU );
-        else rect.top += NtUserDrawMenuBarTemp( hwnd, hdc, &r, menu, NULL );
+        else if (!is_empty_menu_bar( menu )) rect.top += NtUserDrawMenuBarTemp( hwnd, hdc, &r, menu, NULL );
     }
 
     TRACE( "rect after menu %s\n", wine_dbgstr_rect( &rect ));
