@@ -43,6 +43,10 @@ listed. The commits themselves are on the `plus` branch:
 - **Numbers like `&HFFFFFF00` convert to floating point correctly** instead
   of failing with an overflow. (oleaut32, found with the 64-bit XYplorer,
   which did not start)
+- **Date formats with more than four `y`s work**, for example `yyyyy` (year
+  followed by the day of the year) instead of failing. (oleaut32, found
+  with XYplorer, which quit with "Run-time error '5'" when the Tools menu
+  was opened)
 - **Programs that link to the Extended Linguistic Services DLL start.** A stub
   `elscore.dll` reports that no language services are available, so the
   programs use their own fallbacks. (elscore, found with FileLocator Pro)
